@@ -531,11 +531,21 @@ class Mustache_Compiler
     }
 
     const FILTER = '
-        $filter = $context->%s(%s);
+        $method = "%s";
+        $args = explode(":", %s);
+        $filter = $context->$method($args[0]);
+        $user_func_args = [$value];
+        if(!empty($args[1])){
+            $user_func_args = array_merge(
+                $user_func_args,
+                explode(",", $args[1])
+            );
+        }
+
         if (!(%s)) {
             throw new Mustache_Exception_UnknownFilterException(%s);
         }
-        $value = call_user_func($filter, $value);%s
+        $value = call_user_func_array($filter, $user_func_args);%s
     ';
 
     /**
