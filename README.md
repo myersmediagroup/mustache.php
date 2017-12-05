@@ -19,8 +19,10 @@ Quick example of sorting a collection by the name property:
   {{name}}  
 {{collection}}
 ```
-The sort function would look like this:
-```
+
+The sort function would look like this:  
+
+```php
 function sort($collection, $property){
     ...
 }
