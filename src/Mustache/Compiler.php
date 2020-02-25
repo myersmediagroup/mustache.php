@@ -538,7 +538,7 @@ class Mustache_Compiler
         if(!empty($args[1])){
             $user_func_args = array_merge(
                 $user_func_args,
-                str_getcsv($args[1],",","\'")
+                str_getcsv($args[1], ",", "\'")
             );
         }
         if (!(%s)) {
