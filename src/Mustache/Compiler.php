@@ -535,7 +535,7 @@ class Mustache_Compiler
         $args = explode(":", %s, 2);
         $filter = $context->$method($args[0]);
         $user_func_args = [$value];
-        if(!empty($args[1])){
+        if(isset($args[1])){
             $user_func_args = array_merge(
                 $user_func_args,
                 str_getcsv($args[1], ",", "\'")
