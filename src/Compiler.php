@@ -1261,7 +1261,7 @@ class Compiler
         if (!(%s)) {
             throw new \\Mustache\\Exception\\UnknownFilterException(%s);
         }
-        $value = call_user_func($filter, %s);%s
+        $value = call_user_func($filter, %s%s);%s
     ';
     const FILTER_FIRST_VALUE = '$this->resolveValue($value, $context)';
     const FILTER_VALUE = '$value';
@@ -1270,6 +1270,10 @@ class Compiler
      * Generate Mustache Template variable filtering PHP source.
      *
      * If the initial $value is a lambda it will be resolved before starting the filter chain.
+     *
+     * Anything after the first `:` in a filter name is parsed as a comma-separated argument
+     * list (single-quote enclosure) and passed to the filter after the value, e.g.
+     * `{{ items | sort:name }}` calls `sort($items, 'name')`.
      *
      * @param string[] $filters Array of filters
      * @param int      $level
@@ -1284,6 +1288,14 @@ class Compiler
         }
 
         $name     = array_shift($filters);
+        $args     = '';
+        if (strpos($name, ':') !== false) {
+            list($name, $argList) = explode(':', $name, 2);
+            foreach (str_getcsv($argList, ',', "'", '\\') as $arg) {
+                $args .= ', ' . var_export($arg, true);
+            }
+        }
+
         $method   = $this->getFindMethod($name);
         $filter   = ($method !== 'last') ? var_export($name, true) : '';
         $findArg  = $this->getFindMethodArgs($method);
@@ -1291,7 +1303,7 @@ class Compiler
         $msg      = var_export($name, true);
         $value    = $first ? self::FILTER_FIRST_VALUE : self::FILTER_VALUE;
 
-        return sprintf($this->prepare(self::FILTER, $level), $method, $filter, $findArg, $callable, $msg, $value, $this->getFilters($filters, $level, false));
+        return sprintf($this->prepare(self::FILTER, $level), $method, $filter, $findArg, $callable, $msg, $value, $args, $this->getFilters($filters, $level, false));
     }
 
     const LINE = '$buffer .= "\n";';

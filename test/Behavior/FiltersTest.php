@@ -240,6 +240,54 @@ EOS;
         ];
     }
 
+    /**
+     * @dataProvider filterArgumentsData
+     */
+    public function testFilterArguments($tpl, $data, $expect)
+    {
+        $this->mustache->addHelper('args', function () {
+            return json_encode(func_get_args());
+        });
+        $this->mustache->addHelper('join', function ($value, $sep = ',') {
+            return implode($sep, $value);
+        });
+        $this->mustache->addHelper('upper', function ($value) {
+            return strtoupper($value);
+        });
+
+        $this->assertSame($expect, $this->mustache->render($tpl, $data));
+    }
+
+    public function filterArgumentsData()
+    {
+        $data = [
+            'x'    => 'hi',
+            'list' => ['a', 'b'],
+            'lam'  => function () {
+                return 'lambda';
+            },
+        ];
+
+        return [
+            ['{{% FILTERS }}{{{ x | args }}}', $data, '["hi"]'],
+            ['{{% FILTERS }}{{{ x | args:a }}}', $data, '["hi","a"]'],
+            ['{{% FILTERS }}{{{ x | args:a,b,c }}}', $data, '["hi","a","b","c"]'],
+            ["{{% FILTERS }}{{{ x | args:'a,b',c }}}", $data, '["hi","a,b","c"]'],
+            ['{{% FILTERS }}{{{ x | args:0 }}}', $data, '["hi","0"]'],
+            ['{{% FILTERS }}{{{ x | args:1.5,Y.m.d }}}', $data, '["hi","1.5","Y.m.d"]'],
+            ['{{% FILTERS }}{{{ lam | args:q }}}', $data, '["lambda","q"]'],
+            ['{{% FILTERS }}{{ list | join:- | upper }}', $data, 'A-B'],
+            ['{{% FILTERS }}{{# list | join:/ }}[{{ . }}]{{/ list }}', $data, '[a/b]'],
+        ];
+    }
+
+    public function testUnknownFilterWithArguments()
+    {
+        $this->expectException(UnknownFilterException::class);
+        $this->expectExceptionMessage('Unknown filter: nope');
+        $this->mustache->render('{{% FILTERS }}{{ x | nope:a }}', ['x' => 'hi']);
+    }
+
     public function testFiltersWithoutLambdasThrows()
     {
         $this->expectException(InvalidArgumentException::class);
