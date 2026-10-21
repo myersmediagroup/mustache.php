@@ -6,6 +6,26 @@ A [Mustache][mustache] implementation in PHP.
 [![Monthly downloads](http://img.shields.io/packagist/dm/mustache/mustache.svg?style=flat-square)][packagist]
 
 
+## About this fork
+
+Forked by Myers Media Group to add support for filter arguments. To use filter arguments you must have the %FILTERS% pragma enabled. Any string after `:` in the mustache filter call is treated as an arguments list and passed to the filter function. This is the only difference between this version and the official Mustache PHP release.
+
+Quick example of sorting a collection by the name property:  
+```
+{{collection | sort:name}}  
+  {{name}}  
+{{collection}}
+```
+
+The sort function would look like this:  
+
+```php
+function sort($collection, $property) {
+    ...
+}
+```
+
+
 ## Installation
 
 ```
